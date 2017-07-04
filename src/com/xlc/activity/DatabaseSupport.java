@@ -14,6 +14,12 @@ public class DatabaseSupport {
 	public static ResultSet res;
 	public static void main(String[] args) {
 		loadDriver();
+		// 1. look all the databases
+		showDatabases();
+		// 2. create database
+		
+		
+		closeResource();
 		
 	}
 	
@@ -23,19 +29,76 @@ public class DatabaseSupport {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			con = DriverManager.getConnection("jdbc:mysql://localhost/tool?user=root&password=guozhang92");
 			sta = con.createStatement();
-//			if(sta.executeQuery("select * from tool;") != null){
-//				res = sta.getResultSet();
-//				for(int i = 0 ;i < res.getRow();i++){
-//					System.out.println("result : " + res.getString(i));
-//				}
-//			}
-			sta.execute("use tool");
+			
+		} catch (Exception e) {
+			System.out.println("not found ... ");
+		}
+		
+	}
+
+	// close
+	public static void closeResource() {
+		// at last close the resource
+		try {
+			if(res != null){
+				if (!res.isClosed()) {
+					res.close();
+				}
+			}
+			
+			if (sta != null) {
+				if (!sta.isClosed()){
+					sta.close();
+				}
+			}
+			
+			if (con != null){
+				if (!con.isClosed()) {
+					con.close();
+				}
+			}
+			System.out.println("succeed close ResultSet Connection Statement");
+			
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+	
+	// show the databases
+	public static String showDatabases(){
+		String r = "";
+		try{
+			sta.execute("show databases");
+			res = sta.getResultSet();
+			while(res.next()){
+				String s = res.getString(1);
+				r += s + "\r\n";
+				System.out.println(s);
+			}
+		} catch(SQLException e ){
+			e.printStackTrace();
+		}
+		return r;
+	}
+	
+	// use the database
+	public static String useDatabases(String database){
+		String r = "";
+		try{
+			sta.execute("use " + database);
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		return r;
+	}
+	
+	// show the data in the databases
+	public static String showDataInDatabase(String database){
+		String r = "";
+		try{
+			useDatabases("tool");
 			sta.execute("select * from tool_one");
 			res = sta.getResultSet();
-//			String s = res.getString(1);
-//			System.out.println(s);
-//			System.out.println(res.getString(0));
-//			System.out.println(res);
 			int rowCount = 0; 
 			while(res.next()) { 
 				ResultSetMetaData rsmd = res.getMetaData();
@@ -52,21 +115,22 @@ public class DatabaseSupport {
 			}
 			System.out.println("******************************************************");
 			System.out.println("res length : " + rowCount);
-			
-			System.out.println("succeed ... ");
-		} catch (Exception e) {
-			System.out.println("not found ... ");
-		}
-		
-		try {
-			if(res != null){
-				res.close();
-			}
-			sta.close();
-			con.close();
-		} catch (SQLException e) {
+		} catch(SQLException e){
 			e.printStackTrace();
 		}
+		return r;
 	}
-
+	
+	// create the database
+	public static String createDatabase(String name){
+		String r = "";
+		try{
+			sta.execute("create database " + name);
+			r = "succeed";
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		return r;
+	}
+	
 }
